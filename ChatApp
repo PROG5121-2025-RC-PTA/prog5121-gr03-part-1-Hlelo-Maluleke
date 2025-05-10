@@ -1,0 +1,114 @@
+import javax.swing.JOptionPane;
+public class UserInput {
+    public static void main(String[] args) {
+        // Prompt the user for username
+        String username = JOptionPane.showInputDialog(null, "Please enter your username:");
+        // Validate username
+         if (Login.checkUserName(username)) {
+            JOptionPane.showMessageDialog(null, "Username successfully captured");
+        } else {
+            JOptionPane.showMessageDialog(null, "Username is not correctly formatted, please ensure that your username contains an underscore and is no more than five characters in length.");
+        return; 
+         }
+         String firstname = JOptionPane.showInputDialog(null, "Please enter your first name");
+         String lastname = JOptionPane.showInputDialog(null, "Please enter your last name");
+        // Prompt the user for cellphone number
+        String phoneNumber = JOptionPane.showInputDialog(null, "Please enter your cellphone number:");
+        // Validate cellphone number
+        if (Login.checkCellPhoneNumber(phoneNumber)) {
+            JOptionPane.showMessageDialog(null, "Cell phone number successfully added.");
+        } else {
+            JOptionPane.showMessageDialog(null, "Cell phone number incorrectly formatted or does not contain international code.");
+        return; 
+        }
+        // Prompt the user for password
+        String password = JOptionPane.showInputDialog(null, "Please enter your password:");
+        // Validate password complexity
+        if (Login.checkPasswordComplexity(password)) {
+            JOptionPane.showMessageDialog(null, "Password successfully captured");
+        } else {
+            JOptionPane.showMessageDialog(null, "Password is not correctly formatted; please ensure that the password contains at least eight characters, a capital letter, a number, and a special character.");
+        return;
+        }
+        
+        
+    Login.registerUser(username, password, phoneNumber);
+        
+     boolean loginResult = Login.loginUser(username, password);
+        String loginStatus = Login.returnLoginStatus(loginResult, firstname, lastname);
+
+        JOptionPane.showMessageDialog(null,loginStatus);
+
+      
+        
+       
+    
+    } // main method
+}
+
+import javax.swing.JOptionPane;
+
+/**
+ *
+ * @author RC_Student_lab
+ */
+class Login {
+   
+     // Method to validate username
+    public static boolean checkUserName(String username) {
+        return username.contains("_") && username.length() <= 5;
+    }
+
+    // Method to validate cellphone number
+    public static boolean checkCellPhoneNumber(String phoneNumber) {
+        if (phoneNumber.length() != 12) { 
+            return false;
+        }
+        if (!phoneNumber.startsWith("+27")) {
+            return false;
+        }
+        return true;
+    }
+
+    // Method to validate password complexity
+    public static boolean checkPasswordComplexity(String password) {
+        if (password.length() < 8) {
+            return false;
+        }
+        if (!password.matches(".*[A-Z].*")) {
+            return false;
+        }
+        if (!password.matches(".*\\d.*")) {
+            return false;
+        }
+        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
+            return false;
+        }
+        return true;
+        
+        
+        }
+   public static void registerUser(String username, String password, String phoneNumber) {
+        if (!checkUserName(username)) {
+            JOptionPane.showMessageDialog(null, "Invalid username. Please ensure it contains an underscore and is no more than 5 characters long.");
+        } else if (!checkPasswordComplexity(password)) {
+            JOptionPane.showMessageDialog(null,"Invalid password. Please ensure it is at least 8 characters long and contains an uppercase letter, a number, and a special character.");
+        } else if (!checkCellPhoneNumber(phoneNumber)) {
+            JOptionPane.showMessageDialog(null,"Invalid phone number. Please ensure it is 12 digits long and starts with the country code 27.");
+            
+        }
+        
+}
+    public static boolean loginUser(String username, String password) {
+        //  check against the registered username and password
+         boolean loginResult = checkUserName(username) && checkPasswordComplexity(password);
+        return true;
+    }
+    public static String returnLoginStatus(boolean loginResult, String firstname, String lastname) {
+        if (loginResult) {
+            return "Welcome, " + firstname + " " + lastname + " It is great to see you.";
+        } else {
+            return "Username or password incorrect. Please try again.";
+        }
+}
+}

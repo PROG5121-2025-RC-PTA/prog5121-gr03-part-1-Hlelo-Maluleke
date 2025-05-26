@@ -1,0 +1,57 @@
+import javax.swing.JOptionPane;
+
+public class UserInput {
+
+    // Main method, entry point of the program
+    public static void main(String[] args) {
+        // Main menu loop
+        while (true) { // Loop to keep displaying the menu until the user chooses to quit
+            int choice = getMainMenuChoice(); // Get the user's choice from the main menu
+            if (choice == 3) { // Use of an if statement (decision) to check if the user wants to quit
+                break; // Exit the loop if the user chooses to quit
+            }
+
+            switch (choice) { // Use of a switch statement (decision) to handle different user choices
+                case 1:
+                    Login.registerUser(); // Call the registerUser method in the Login class
+                    break;
+                case 2:
+                    Login.loginUser();    // Call loginUser method in the Login class
+                    break;
+                default:
+                    JOptionPane.showMessageDialog(null, "Invalid choice. Please enter 1, 2, or 3."); // Display an error message for invalid input
+            }
+        }
+        JOptionPane.showMessageDialog(null, "Exiting the application. Goodbye!"); // Display a goodbye message when the user quits
+    }
+
+    // Method to get main menu choice
+    public static int getMainMenuChoice() {
+        // Displays the main menu and gets the user's choice
+        String choice = JOptionPane.showInputDialog(null,
+                "Enter 1 to Register, 2 to Login, or 3 to Quit:"); // Display the main menu using JOptionPane
+        if (choice == null) {
+            return 3; // Treat null as quit
+        }
+        try {
+            return Integer.parseInt(choice); // Parse the user's input to an Integer
+        } catch (NumberFormatException e) { // Catch any errors that occur during parsing
+            return -1; // Return -1 for invalid input, and handle it in main method
+        }
+    }
+
+    // Method to get login menu choice
+    public static int getLoginMenuChoice(String username) {
+        // Displays the login menu and gets the user's choice
+        String choice = JOptionPane.showInputDialog(null,
+                "Welcome " + username + "! Enter 1 to send Messages, 2 to show recently sent messages - Coming Soon, or 3 to Quit"); // Display the login menu using JOptionPane
+        if (choice == null) {
+            return 3;
+        }
+        try {
+            return Integer.parseInt(choice);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+}

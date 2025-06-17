@@ -1,13 +1,21 @@
-﻿import javax.swing.JOptionPane;
-import java.util.Random;
-import java.io.FileWriter;
-import java.io.IOException;
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.chatapp3;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
-import org.json.JSONObject;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Random;
+import javax.swing.JOptionPane;
 
-
-public class Message {
+/**
+ *
+ * @author RC_Student_lab
+ */
+class Message {
     // Class variables (static)
     private static Random random = new Random();
     private static MessageData[] messages = new MessageData[100]; // Sent Messages array
@@ -15,7 +23,7 @@ public class Message {
     private static MessageData[] storedMessages = new MessageData[100]; // Stored Messages array (from JSON)
     private static String[] messageHashes = new String[100]; // Message Hash array
     private static String[] messageIds = new String[100]; // Message ID array
-    
+
     private static int messageCount = 0;
     private static int disregardedCount = 0;
     private static int storedCount = 0;
@@ -39,7 +47,7 @@ public class Message {
             this.messageNumber = messageNumber;
             this.recipientCell = recipientCell;
         }
-        
+
         // Getter methods for accessing private fields
         public String getMessageId() {
             return messageId;
@@ -49,11 +57,8 @@ public class Message {
 
     // Method to generate a unique 10 digit message ID
     public static String generateMessageId() {
-        long id = random.nextLong() % 10000000000L;
-        if (id < 0) {
-            id += 10000000000L;
-        }
-        return String.valueOf(id);
+        long id = Math.abs(random.nextLong() % 10000000000L);
+        return String.format("%010d", id);
     }
 
 
@@ -71,11 +76,7 @@ public class Message {
 
     // Method to check the message length
     public static boolean checkMessageLength(String messageText) {
-        if (messageText != null && messageText.length() < 250) {
-            return true;
-        } else {
-            return false;
-        }
+        return messageText != null && messageText.length() < 250;
     }
 
 
@@ -90,7 +91,7 @@ public class Message {
         for (int i = 0; i < numberOfMessages; i++) {
             String messageText = JOptionPane.showInputDialog(null, "Enter a message " + (i + 1) + ":");
             String recipientCell = JOptionPane.showInputDialog(null, "Enter recipient cell number " + (i + 1) + ":");
-            
+
             if (messageText == null || messageText.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Message cannot be empty.");
                 i--;
@@ -106,64 +107,49 @@ public class Message {
                 i--;
                 continue;
             }
-            
+
             String currentMessageId = generateMessageId();
             if (!checkMessageID(currentMessageId)) {
                 JOptionPane.showMessageDialog(null, "Message ID is invalid");
                 i--;
                 continue;
             }
-            
+
             String messageHash = createMessageHash(currentMessageId, messageCount + 1, messageText);
-            String choice = JOptionPane.showInputDialog(null, "Enter 'send' to send, 'store' to store, or 'discard' to discard the message:");
+            String[] options = {"Send", "Store", "Discard"};
+            int choice = JOptionPane.showOptionDialog(null, "Choose an action for this message:", "Message Action",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
 
+            switch (choice) {
+                case 0: // Send
+                    if (messageCount < messages.length) {
+                        messages[messageCount] = new MessageData(currentMessageId, username, messageText, messageCount + 1, recipientCell);
+                        messageCount++;
 
-            if (choice != null) {
-                switch (choice.toLowerCase()) {
-                    case "send":
-                        // Add to sent messages array
-                        if (messageCount < messages.length) {
-                            messages[messageCount] = new MessageData(currentMessageId, username, messageText, messageCount + 1, recipientCell);
-                            messageCount++;
-                            
-                            // Add to message hashes array
-                            if (hashCount < messageHashes.length) {
-                                messageHashes[hashCount++] = messageHash;
-                            }
-                            
-                            // Add to message IDs array
-                            if (idCount < messageIds.length) {
-                                messageIds[idCount++] = currentMessageId;
-                            }
-                            
-                            JOptionPane.showMessageDialog(null, "Message sent successfully with Hash: " + messageHash);
-                        } else {
-                            JOptionPane.showMessageDialog(null, "Message buffer is full");
+                        if (hashCount < messageHashes.length) {
+                            messageHashes[hashCount++] = messageHash;
                         }
-                        break;
-                        
-                    case "store":
-                        storeMessage(currentMessageId, username, messageText, messageCount + 1, recipientCell);
-                        JOptionPane.showMessageDialog(null, "Message stored successfully.");
-                        break;
-                        
-                    case "discard":
-                        // Add to disregarded messages array
-                        if (disregardedCount < disregardedMessages.length) {
-                            disregardedMessages[disregardedCount] = new MessageData(currentMessageId, username, messageText, disregardedCount + 1, recipientCell);
-                            disregardedCount++;
+                        if (idCount < messageIds.length) {
+                            messageIds[idCount++] = currentMessageId;
                         }
-                        JOptionPane.showMessageDialog(null, "Message discarded.");
-                        break;
-                        
-                    default:
-                        // Treat invalid choice as discard
-                        if (disregardedCount < disregardedMessages.length) {
-                            disregardedMessages[disregardedCount] = new MessageData(currentMessageId, username, messageText, disregardedCount + 1, recipientCell);
-                            disregardedCount++;
-                        }
-                        JOptionPane.showMessageDialog(null, "Invalid choice. Message discarded.");
-                }
+                        JOptionPane.showMessageDialog(null, "Message sent successfully with Hash: " + messageHash);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Sent message buffer is full");
+                    }
+                    break;
+
+                case 1: // Store
+                    storeMessage(currentMessageId, username, messageText, messageCount + 1, recipientCell);
+                    JOptionPane.showMessageDialog(null, "Message stored successfully.");
+                    break;
+
+                case 2: // Discard
+                default: // Also handles closing the dialog
+                    if (disregardedCount < disregardedMessages.length) {
+                        disregardedMessages[disregardedCount++] = new MessageData(currentMessageId, username, messageText, 0, recipientCell);
+                    }
+                    JOptionPane.showMessageDialog(null, "Message discarded.");
+                    break;
             }
         }
         JOptionPane.showMessageDialog(null, "Message sending process completed.");
@@ -173,15 +159,14 @@ public class Message {
 
     // Method to create and return the Message Hash
     private static String createMessageHash(String messageId, int messageNumber, String messageText) {
-        String[] words = messageText.split("\\s+");
+        String[] words = messageText.trim().split("\\s+");
         String firstWord = words.length > 0 ? words[0] : "";
-        String lastWord = words.length > 0 ? words[words.length - 1] : "";
-        String hash = String.format("%02d:%d:%s%s",
-                Integer.parseInt(messageId.substring(0, 2)),
+        String lastWord = words.length > 1 ? words[words.length - 1] : firstWord;
+        return String.format("%s:%d:%s%s",
+                messageId.substring(0, 2),
                 messageNumber,
                 firstWord.toUpperCase(),
                 lastWord.toUpperCase());
-        return hash;
     }
 
 
@@ -215,13 +200,13 @@ public class Message {
                 String messageText = messageJson.getString("messageText");
                 int messageNumber = messageJson.getInt("messageNumber");
                 String recipientCell = messageJson.getString("recipientCell");
-                
+
                 storedMessages[storedCount] = new MessageData(messageId, username, messageText, messageNumber, recipientCell);
                 storedCount++;
             }
-            JOptionPane.showMessageDialog(null, "Loaded " + storedCount + " stored messages.");
+            System.out.println("Loaded " + storedCount + " stored messages."); // Log to console instead of popup
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "No stored messages file found or error reading file.");
+            System.out.println("No stored messages file found or error reading file."); // Log to console
         }
     }
 
@@ -248,17 +233,17 @@ public class Message {
         if (messageCount == 0) {
             return "No messages sent yet.";
         }
-        
+
         MessageData longestMessage = null;
-        int maxLength = 0;
-        
+        int maxLength = -1;
+
         for (int i = 0; i < messageCount; i++) {
             if (messages[i] != null && messages[i].messageText.length() > maxLength) {
                 maxLength = messages[i].messageText.length();
                 longestMessage = messages[i];
             }
         }
-        
+
         if (longestMessage != null) {
             return "Longest Message:\n" +
                    "Sender: " + longestMessage.senderUsername + "\n" +
@@ -282,7 +267,7 @@ public class Message {
                        "Sender: " + messages[i].senderUsername;
             }
         }
-        
+
         // Search in stored messages
         for (int i = 0; i < storedCount; i++) {
             if (storedMessages[i] != null && storedMessages[i].getMessageId().equals(searchId)) {
@@ -293,7 +278,7 @@ public class Message {
                        "Sender: " + storedMessages[i].senderUsername;
             }
         }
-        
+
         return "Message ID not found: " + searchId;
     }
 
@@ -302,7 +287,7 @@ public class Message {
     public static String searchByRecipient(String recipientNumber) {
         StringBuilder sb = new StringBuilder("Messages sent to " + recipientNumber + ":\n\n");
         boolean found = false;
-        
+
         // Search in sent messages
         for (int i = 0; i < messageCount; i++) {
             if (messages[i] != null && messages[i].recipientCell.equals(recipientNumber)) {
@@ -312,7 +297,7 @@ public class Message {
                 found = true;
             }
         }
-        
+
         // Search in stored messages
         for (int i = 0; i < storedCount; i++) {
             if (storedMessages[i] != null && storedMessages[i].recipientCell.equals(recipientNumber)) {
@@ -322,11 +307,11 @@ public class Message {
                 found = true;
             }
         }
-        
+
         if (!found) {
             return "No messages found for recipient: " + recipientNumber;
         }
-        
+
         return sb.toString();
     }
 
@@ -338,14 +323,15 @@ public class Message {
             if (messages[i] != null) {
                 String messageHash = createMessageHash(messages[i].getMessageId(), messages[i].messageNumber, messages[i].messageText);
                 if (messageHash.equals(hashToDelete)) {
-                    // Shift array elements to remove the message
+                    String messageIdToDelete = messages[i].getMessageId();
+                    // Shift array elements to remove the message from 'messages'
                     for (int j = i; j < messageCount - 1; j++) {
                         messages[j] = messages[j + 1];
                     }
                     messages[messageCount - 1] = null;
                     messageCount--;
-                    
-                    // Also remove from hashes array
+
+                    // Also remove from 'messageHashes' array
                     for (int k = 0; k < hashCount; k++) {
                         if (messageHashes[k] != null && messageHashes[k].equals(hashToDelete)) {
                             for (int l = k; l < hashCount - 1; l++) {
@@ -356,7 +342,17 @@ public class Message {
                             break;
                         }
                     }
-                    
+                     // Also remove from 'messageIds' array
+                    for (int k = 0; k < idCount; k++) {
+                        if (messageIds[k] != null && messageIds[k].equals(messageIdToDelete)) {
+                            for (int l = k; l < idCount - 1; l++) {
+                                messageIds[l] = messageIds[l + 1];
+                            }
+                            messageIds[idCount - 1] = null;
+                            idCount--;
+                            break;
+                        }
+                    }
                     return "Message with hash " + hashToDelete + " has been deleted successfully.";
                 }
             }
@@ -369,10 +365,11 @@ public class Message {
     public static String displayFullReport() {
         StringBuilder sb = new StringBuilder("FULL MESSAGE REPORT\n");
         sb.append("====================\n\n");
-        
+
         // Sent Messages Report
         sb.append("SENT MESSAGES (" + messageCount + "):\n");
         sb.append("-".repeat(30)).append("\n");
+        if (messageCount == 0) sb.append("None\n\n");
         for (int i = 0; i < messageCount; i++) {
             if (messages[i] != null) {
                 sb.append("Message #").append(i + 1).append(":\n");
@@ -383,10 +380,11 @@ public class Message {
                 sb.append("  Hash: ").append(createMessageHash(messages[i].getMessageId(), messages[i].messageNumber, messages[i].messageText)).append("\n\n");
             }
         }
-        
+
         // Stored Messages Report
         sb.append("STORED MESSAGES (" + storedCount + "):\n");
         sb.append("-".repeat(30)).append("\n");
+        if (storedCount == 0) sb.append("None\n\n");
         for (int i = 0; i < storedCount; i++) {
             if (storedMessages[i] != null) {
                 sb.append("Stored Message #").append(i + 1).append(":\n");
@@ -396,10 +394,11 @@ public class Message {
                 sb.append("  Message: ").append(storedMessages[i].messageText).append("\n\n");
             }
         }
-        
+
         // Disregarded Messages Report
         sb.append("DISREGARDED MESSAGES (" + disregardedCount + "):\n");
         sb.append("-".repeat(30)).append("\n");
+        if (disregardedCount == 0) sb.append("None\n\n");
         for (int i = 0; i < disregardedCount; i++) {
             if (disregardedMessages[i] != null) {
                 sb.append("Disregarded Message #").append(i + 1).append(":\n");
@@ -409,32 +408,14 @@ public class Message {
                 sb.append("  Message: ").append(disregardedMessages[i].messageText).append("\n\n");
             }
         }
-        
+
         // Summary
         sb.append("SUMMARY:\n");
         sb.append("-".repeat(30)).append("\n");
         sb.append("Total Sent Messages: ").append(messageCount).append("\n");
         sb.append("Total Stored Messages: ").append(storedCount).append("\n");
         sb.append("Total Disregarded Messages: ").append(disregardedCount).append("\n");
-        sb.append("Total Message Hashes: ").append(hashCount).append("\n");
-        sb.append("Total Message IDs: ").append(idCount).append("\n");
-        
+
         return sb.toString();
     }
-
-
-    // Method to return a list of all the messages sent while the program is running
-    public static String printMessages() {
-        if (messageCount == 0) {
-            return "No messages sent yet.";
-        }
-        StringBuilder sb = new StringBuilder("List of all sent messages:\n");
-        for (int i = 0; i < messageCount; i++) {
-            if (messages[i] != null) {
-                sb.append("Message ID: ").append(messages[i].getMessageId()).append("\n");
-                sb.append("Sender: ").append(messages[i].senderUsername).append("\n");
-                sb.append("Text: ").append(messages[i].messageText).append("\n");
-                sb.append("Number: ").append(messages[i].messageNumber).append("\n");
-                sb.append("Recipient: ").append(messages[i].recipientCell).append("\n\n");
-            }
-        }
+}
